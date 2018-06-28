@@ -16,10 +16,13 @@ package diningphilosophers;
 public class DiningPhilosophers {
     
     // boolean array of fork statuses (lifted or not) 
-    static boolean forkLifted [] = {false, false};
+    static boolean forkLifted [] = {false, false, false, false};
     
     // length of forkLifted array
-    static int numberOfForks = 2;
+    static int numberOfForks = 4;
+    
+    // current time slice (counter)
+    static int t = 0;
 
     /**
      * @param args the command line arguments
@@ -27,33 +30,91 @@ public class DiningPhilosophers {
     public static void main(String[] args) {
         // TODO code application logic here
         
-        Philosopher aristotle = new Philosopher();
-        aristotle.name = "Aristotle";
+        Philosopher p0 = new Philosopher();
+        p0.name = "Aristotle";
         
-        Philosopher socrates = new Philosopher();
-        socrates.name = "Socrates";
+        Philosopher p1 = new Philosopher();
+        p1.name = "Socrates";
+        
+        Philosopher p2 = new Philosopher();
+        p2.name = "Plato";
+        
+        Philosopher p3 = new Philosopher();
+        p3.name = "Heroditus";
         
         // if each philosophers lifts left fork first,
         // then neither can ever eat, 
         // because both forks must be lifted to eat.
-        aristotle.liftLeftFork();
-        socrates.liftLeftFork();
-        aristotle.liftRightFork();
-        socrates.liftRightFork();
+        p0.liftLeftFork();
+        p1.liftLeftFork();
+        p2.liftLeftFork();
+        p3.liftLeftFork();
+        p0.liftRightFork();
+        p1.liftRightFork();
+        p2.liftRightFork();
+        p3.liftRightFork();
         
         resetForks();
         
-        // if each philosophers lifts even fork first,
-        // then one philosopher can eat
-        aristotle.liftEvenFork();
-        socrates.liftEvenFork();
-        aristotle.liftOddFork();
-        socrates.liftOddFork();
+        // if there are an even number of philosophers, and
+        // if each philosopher lifts even fork first,
+        // then either the even (or odd) philosophers can eat
+        // Note that the even and odd philosophers 
+        // are processed in separate batches
+        
+        p0.liftEvenFork(); // even philosopher
+        p2.liftEvenFork(); // even philosopher
+        p1.liftEvenFork(); // odd philosopher
+        p3.liftEvenFork(); // odd philosopher
+        p0.liftOddFork();
+        p2.liftOddFork();
+        p1.liftOddFork();
+        p3.liftOddFork();  
+        
+        System.out.println();
+        
+        t++;
+        
+        p0.eat();
+        p1.eat();
+        p2.eat();
+        p3.eat();
+        
+        System.out.println();
+        
+        t++;
+        
+        p0.eat();
+        p1.eat();
+        p2.eat();
+        p3.eat();
+        
+        System.out.println();
+        
+        p0.liftEvenFork(); // even philosopher
+        p2.liftEvenFork(); // even philosopher
+        p1.liftEvenFork(); // odd philosopher
+        p3.liftEvenFork(); // odd philosopher
+        p0.liftOddFork();
+        p2.liftOddFork();
+        p1.liftOddFork();
+        p3.liftOddFork();  
+        
+        System.out.println();
+        
+        p0.eat();
+        p1.eat();
+        p2.eat();
+        p3.eat();
+        
+        System.out.println();
         
     }
     public static void resetForks() {
         forkLifted[0] = false;
         forkLifted[1] = false;
+        forkLifted[2] = false;
+        forkLifted[3] = false;
         System.out.println();
         System.out.println("Reset Forks");
         System.out.println();
@@ -69,6 +130,7 @@ class Philosopher {
     boolean rightForkUp = false;
     boolean leftForkUp = false;
     boolean philosopherIsEven = false;
+    int lastAte = -100;
     
     Philosopher() { // constructor
         
@@ -84,33 +146,48 @@ class Philosopher {
             rightFork = 0;
     }
     void eat() {
-        System.out.println(name + ": Yum!");
-    }
-    void think() {
-        System.out.println(name + ": Hm.");
-    }
-    void liftLeftFork() {
-        if(DiningPhilosophers.forkLifted[leftFork]) {
-            System.out.println(name + ": Can't lift left fork: " 
-                    + leftFork);
+        if(leftForkUp && rightForkUp 
+                && DiningPhilosophers.t - lastAte > 10) {
+            System.out.println(name + ": Yum!");
+            lastAte = DiningPhilosophers.t;
+            // drop the forks
+            DiningPhilosophers.forkLifted[leftFork] = false;
+            DiningPhilosophers.forkLifted[rightFork] = false;
         }
         else {
-            DiningPhilosophers.forkLifted[leftFork] = true;
-            leftForkUp = true;
-            System.out.println(name + ": Successfully lifted left fork: " 
-                    + leftFork);
+            System.out.println(name + ": Can't eat" );
+            think();
+        }
+    }
+    void think() {
+        System.out.println(name + " thinks: Hm.");
+    }
+    void liftLeftFork() {
+        if (DiningPhilosophers.t - lastAte > 10) {
+            if(DiningPhilosophers.forkLifted[leftFork]) {
+                System.out.println(name + ": Can't lift left fork: " 
+                        + leftFork);
+            }
+            else {
+                DiningPhilosophers.forkLifted[leftFork] = true;
+                leftForkUp = true;
+                System.out.println(name + ": Successfully lifted left fork: " 
+                        + leftFork);
+            }
         }
     }
     void liftRightFork() {
-        if(DiningPhilosophers.forkLifted[rightFork]) {
-            System.out.println(name + ": Can't lift right fork: " 
-                    + rightFork);
-        }
-        else {
-            DiningPhilosophers.forkLifted[rightFork] = true;
-            rightForkUp = true;
-            System.out.println(name + ": Successfully lifted right fork: " 
-                    + rightFork);
+        if (DiningPhilosophers.t - lastAte > 10) {
+            if(DiningPhilosophers.forkLifted[rightFork]) {
+                System.out.println(name + ": Can't lift right fork: " 
+                        + rightFork);
+            }
+            else {
+                DiningPhilosophers.forkLifted[rightFork] = true;
+                rightForkUp = true;
+                System.out.println(name + ": Successfully lifted right fork: " 
+                        + rightFork);
+            }
         }
     } 
     void liftEvenFork() {
